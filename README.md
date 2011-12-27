@@ -8,7 +8,7 @@ Clone the repo
 
 ```
 $ # Clone the repo
-$ git clone url/here/clubot.git
+$ git clone https://github.com/HackingGibsons/clubot.git
 $ cd clubot
 $ # Set up the project
 $ # (asdf, submodules, cast the darks spells to invoke the names of the ancients in eternal slumber)
