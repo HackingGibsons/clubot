@@ -3,6 +3,7 @@
   :depends-on (#:log5
                #:arnesi
 
+               #:zeromq
                #:cl-irc)
   :components ((:module "src" :components
                         (;; Basics

@@ -1,0 +1,3 @@
+[submodule "vendor/cl-zmq"]
+	path = vendor/cl-zmq
+	url = https://github.com/sshirokov/cl-zmq.git
