@@ -4,7 +4,7 @@
   (:export :start-logging
            :stop-logging
 
-           :cluebot))
+           :clubot))
 
 (in-package :clubot)
-(defcategory cluebot)
+(defcategory clubot)

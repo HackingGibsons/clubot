@@ -1,7 +1,7 @@
 (in-package :clubot)
 
-(defgeneric cluebot (&key)
+(defgeneric clubot (&key)
   (:documentation "The main entry of the cluebot"))
 
-(defmethod cluebot (&key)
-  (log-for (output cluebot) "Booting.."))
+(defmethod clubot (&key)
+  (log-for (output clubot) "Booting.."))
