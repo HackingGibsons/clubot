@@ -45,7 +45,20 @@ using `user' and `pass' to connect if needed."))
                        :server server :port port
                        :username user :password pass))))
 
+(defmethod on-privmsg ((bot clubot) msg)
+  (destructuring-bind (target text &key from) `(,@(irc:arguments msg) :from ,(irc:source msg))
+    (let ((msg (make-instance 'zmq:msg :data
+                              (format nil "PRIVMSG ~A ~S" target `(:target ,target
+                                                                   :from ,from
+                                                                   :msg ,text)))))
+      (zmq:send! (event-pub-sock bot) msg)
+      (log-for (output clubot) "<~A> [~A] ~A" from target text)))
+  t)
+
 (defmethod add-hooks ((bot clubot))
+  (irc:add-hook (connection bot) 'irc:irc-privmsg-message (arnesi:curry #'on-privmsg bot)))
+
+(defmethod add-hooks :after ((bot clubot))
   "Add the hooks required for operation of `bot'"
   (flet ((renick (msg)
            (let ((nick (second (irc:arguments msg))))
@@ -68,6 +81,7 @@ using `user' and `pass' to connect if needed."))
 
       ;;Bind up the event broadcast
       (zmq:bind epub (format nil "ipc:///tmp/clubot.~A.events.pub" (nick bot)))
+      (zmq:bind epub (format nil "tcp://*:~A" *event-port*))
 
       (unwind-protect (call-next-method)
         (zmq:close (event-pub-sock epub))
@@ -98,6 +112,8 @@ using `user' and `pass' to connect if needed."))
 ;; Entry
 (defvar *clubot* nil
   "The current clubot if one is running.")
+(defvar *event-port* 14532
+  "The port we bind on")
 
 (defgeneric clubot (&key)
   (:documentation "The main entry of the clubot"))
