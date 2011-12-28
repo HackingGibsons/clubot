@@ -17,7 +17,7 @@
              :initarg :irc-password
              :accessor irc-pass)
 
-   (context :initarg nil
+   (context :initform nil
             :initarg :context
             :accessor context)
    (connection :initarg nil
