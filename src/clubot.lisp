@@ -22,6 +22,8 @@
             :accessor context)
    (event-pub-sock :initform nil
                    :accessor event-pub-sock)
+   (request-sock :initform nil
+                 :accessor request-sock)
    (connection :initarg nil
                :initform :connection
                :accessor connection))
@@ -89,17 +91,23 @@ using `user' and `pass' to connect if needed."))
   "Set up the ZMQ context and other in-flight parameters for the `bot'"
   (zmq:with-context (ctx 1)
     (zmq:with-socket (epub ctx zmq:pub)
-      (setf (context bot) ctx
-            (event-pub-sock bot) epub)
+      (zmq:with-socket (req ctx zmq:router)
 
-      ;;Bind up the event broadcast
-      (zmq:bind epub (format nil "ipc:///tmp/clubot.~A.events.pub" (nick bot)))
-      (zmq:bind epub (format nil "tcp://*:~A" *event-port*))
+        (setf (context bot) ctx
+              (event-pub-sock bot) epub
+              (request-sock bot) req)
 
-      (unwind-protect (call-next-method)
-        (zmq:close (event-pub-sock bot))
-        (setf (context bot) nil
-              (event-pub-sock bot) nil)))))
+        ;;Bind up the event broadcast and request sock
+        (zmq:bind epub (format nil "ipc:///tmp/clubot.~A.events.pub.sock" (nick bot)))
+        (zmq:bind epub (format nil "tcp://*:~A" *event-port*))
+
+        (zmq:bind req (format nil "ipc:///tmp/clubot.~A.request.dealer.sock" (nick bot)))
+        (zmq:bind req (format nil "tcp://*:~A" *request-port*))
+
+        (unwind-protect (call-next-method)
+          (zmq:close (event-pub-sock bot))
+          (setf (context bot) nil
+                (event-pub-sock bot) nil))))))
 
 (defmethod run ((bot clubot) &key)
   (log-for (output clubot) "Using context: ~A" (context bot))
@@ -127,6 +135,9 @@ using `user' and `pass' to connect if needed."))
   "The current clubot if one is running.")
 (defvar *event-port* 14532
   "The port we bind on")
+(defvar *request-port* 14533
+  "The port we bind on")
+
 
 (defgeneric clubot (&key)
   (:documentation "The main entry of the clubot"))
