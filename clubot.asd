@@ -3,7 +3,7 @@
   :depends-on (#:log5
                #:arnesi
                #:iolib
-
+               #:cl-json
                #:zeromq
                #:cl-irc)
   :components ((:module "src" :components
