@@ -65,10 +65,14 @@ using `user' and `pass' to connect if needed."))
     (zmq:with-socket (epub ctx zmq:pub)
       (setf (context bot) ctx
             (event-pub-sock bot) epub)
-    (unwind-protect (call-next-method)
-      (zmq:close (event-pub-sock epub))
-      (setf (context bot) nil
-            (event-pub-sock epub) nil)))))
+
+      ;;Bind up the event broadcast
+      (zmq:bind epub (format nil "ipc:///tmp/clubot.~A.events.pub" (nick bot)))
+
+      (unwind-protect (call-next-method)
+        (zmq:close (event-pub-sock epub))
+        (setf (context bot) nil
+              (event-pub-sock epub) nil)))))
 
 (defmethod run ((bot clubot) &key)
   (log-for (output clubot) "Using context: ~A" (context bot))
