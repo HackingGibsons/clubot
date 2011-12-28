@@ -47,6 +47,10 @@ using `user' and `pass' to connect if needed."))
                        :server server :port port
                        :username user :password pass))))
 
+(defcategory request)
+(defmethod on-request ((bot clubot) msg id)
+  (log-for (output request) "Got request: ~S" msg))
+
 (defcategory privmsg)
 (defmethod on-privmsg ((bot clubot) msg)
   (destructuring-bind (target text &key from) `(,@(irc:arguments msg) :from ,(irc:source msg))
@@ -109,6 +113,7 @@ using `user' and `pass' to connect if needed."))
           (setf (context bot) nil
                 (event-pub-sock bot) nil))))))
 
+(defcategory eventloop)
 (defmethod run ((bot clubot) &key)
   (log-for (output clubot) "Using context: ~A" (context bot))
   (iolib.multiplex:with-event-base (ev)
@@ -116,13 +121,28 @@ using `user' and `pass' to connect if needed."))
              "HACK: Get the unix FD under the connection."
              (sb-bsd-sockets:socket-file-descriptor (usocket:socket (irc::socket c))))
 
+           (maybe-service-zmq-request (fd event ex)
+             "See if we have an event on the ZMQ request socket"
+             (let ((events (zmq:getsockopt (request-sock bot) zmq:events)))
+               (unless (zerop (boole boole-and events zmq:pollin))
+                 (let ((id (make-instance 'zmq:msg))
+                       (msg (make-instance 'zmq:msg)))
+                   (zmq:recv! (request-sock bot) id)
+                   (zmq:recv! (request-sock bot) msg)
+
+                   (on-request bot (zmq:msg-data-as-string msg) (zmq:msg-data-as-array id))))))
+
+
            (irc-message-or-exit (fd event ex)
              "Read an IRC event, and if we find none available, exit the event loop"
              (declare (ignorable fd event ex))
              (unless (irc:read-message (connection bot))
                (iolib.multiplex:exit-event-loop ev))))
 
-      (iolib.multiplex:set-io-handler ev (connection-fd (connection bot)) :read #'irc-message-or-exit)
+      (iolib.multiplex:set-io-handler ev (zmq:getsockopt (request-sock bot) zmq:fd)
+                                      :read #'maybe-service-zmq-request)
+      (iolib.multiplex:set-io-handler ev (connection-fd (connection bot))
+                                      :read #'irc-message-or-exit)
       (iolib.multiplex:event-dispatch ev))))
 
 (defmethod initialize-instance :after ((bot clubot) &key)
