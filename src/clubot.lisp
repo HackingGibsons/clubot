@@ -130,7 +130,8 @@ using `user' and `pass' to connect if needed."))
   (:documentation "The main entry of the clubot"))
 
 (defmethod clubot (&key (nick "clubot") (host "localhost") (port 6667))
-  (let ((*clubot* (make-instance 'clubot :nick nick
-                                 :irc-host host :irc-port port)))
+  (let ((bot (make-instance 'clubot :nick nick
+                            :irc-host host :irc-port port)))
+    (setf *clubot* bot)
     (log-for (output clubot) "Booting..")
-    (run *clubot*)))
+    (run bot)))
