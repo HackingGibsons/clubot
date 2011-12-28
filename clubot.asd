@@ -2,6 +2,7 @@
   :version "0.0.0"
   :depends-on (#:log5
                #:arnesi
+               #:iolib
 
                #:zeromq
                #:cl-irc)

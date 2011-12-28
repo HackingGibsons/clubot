@@ -72,7 +72,19 @@ using `user' and `pass' to connect if needed."))
 
 (defmethod run ((bot clubot) &key)
   (log-for (output clubot) "Using context: ~A" (context bot))
-  (irc:read-message-loop (connection bot)))
+  (iolib.multiplex:with-event-base (ev)
+    (flet ((connection-fd (c)
+             "HACK: Get the unix FD under the connection."
+             (sb-bsd-sockets:socket-file-descriptor (usocket:socket (irc::socket c))))
+
+           (irc-message-or-exit (fd event ex)
+             "Read an IRC event, and if we find none available, exit the event loop"
+             (declare (ignorable fd event ex))
+             (unless (irc:read-message (connection bot))
+               (iolib.multiplex:exit-event-loop ev))))
+
+      (iolib.multiplex:set-io-handler ev (connection-fd (connection bot)) :read #'irc-message-or-exit)
+      (iolib.multiplex:event-dispatch ev))))
 
 (defmethod initialize-instance :after ((bot clubot) &key)
   "Bind a connection to the bot instance"
