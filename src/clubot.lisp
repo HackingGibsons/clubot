@@ -29,6 +29,9 @@ using `user' and `pass' to connect if needed."))
 (defgeneric run (bot &key)
   (:documentation "Run the event loop of the given `bot'"))
 
+(defgeneric add-hooks (bot)
+  (:documentation "Adds the hooks required for the bot's operation."))
+
 (defmethod connect ((bot clubot) nick server port &key user pass)
   "Connect a clubot to the given endpoint and store the connection."
   (prog1 bot
@@ -37,19 +40,24 @@ using `user' and `pass' to connect if needed."))
                        :server server :port port
                        :username user :password pass))))
 
+(defmethod add-hooks ((bot clubot))
+  (flet ((renick (msg)
+           (let ((nick (second (irc:arguments msg))))
+             (log-for (output clubot) "nick: ~A" nick)
+             (irc:nick (irc:connection msg) (format nil "~A-" nick)))))
+
+    (irc:add-hook (connection bot) 'irc:irc-err_nicknameinuse-message
+                  #'renick)))
+
+(defmethod run :before ((bot clubot) &key)
+  (add-hooks bot))
+
 (defmethod run ((bot clubot) &key)
   (irc:read-message-loop (connection bot)))
 
 (defmethod initialize-instance :after ((bot clubot) &key)
   (with-slots (connection nick irc-host irc-port irc-user irc-pass) bot
-    (connect bot nick irc-host irc-port :user irc-user :pass irc-pass)
-
-    (irc:add-hook (connection bot)
-                  'irc:irc-err_nicknameinuse-message
-                  #'(lambda (msg)
-                      (describe msg)
-                      (irc:nick (irc:connection msg) "clubot-")
-                      ))))
+    (connect bot nick irc-host irc-port :user irc-user :pass irc-pass)))
 
 ;; Entry
 (defvar *clubot* nil
