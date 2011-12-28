@@ -48,11 +48,14 @@ using `user' and `pass' to connect if needed."))
 (defmethod on-privmsg ((bot clubot) msg)
   (destructuring-bind (target text &key from) `(,@(irc:arguments msg) :from ,(irc:source msg))
     (log-for (output clubot) "Target: ~S Self: ~S" target (irc:nickname (irc:user (connection bot))))
-    (let* ((target (if (string= target (irc:nickname (irc:user (connection bot)))) "*self*" target))
+    (let* ((me (irc:nickname (irc:user (connection bot))))
+           ;; We mask the target so that we can make stable 0MQ subscriptions to private messages
+           (target (if (string= target me) :self target))
            (msg (make-instance 'zmq:msg :data
-                               (format nil "PRIVMSG ~A ~S" target `(:target ,target
-                                                                    :from ,from
-                                                                    :msg ,text)))))
+                               (format nil "PRIVMSG ~S ~S ~S " target from `(:target ,target
+                                                                             :self ,me
+                                                                             :from ,from
+                                                                             :msg ,text)))))
       (zmq:send! (event-pub-sock bot) msg)
       (log-for (output clubot) "<~A> [~A] ~A" from target text)))
   t)
