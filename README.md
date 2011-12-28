@@ -25,7 +25,7 @@ By default the bot will bind a ZMQ:PUB socket to `ipc:///tmp/clubot.name.events.
 It will emit one of the below messages at that address for any listening consumers. Each message is prefixed with
 a `:KEYWORD` describing its type. The messages listed bellow will use this convention.
 
-## :PRIVMSG
+### :PRIVMSG
 Emitted when the bot hears anything. The format for the message is:
 
 ```
