@@ -20,6 +20,8 @@
    (context :initform nil
             :initarg :context
             :accessor context)
+   (event-pub-sock :initform nil
+                   :accessor event-pub-sock)
    (connection :initarg nil
                :initform :connection
                :accessor connection))
@@ -60,9 +62,13 @@ using `user' and `pass' to connect if needed."))
 (defmethod run :around ((bot clubot) &key)
   "Set up the ZMQ context and other in-flight parameters for the `bot'"
   (zmq:with-context (ctx 1)
-    (setf (context bot) ctx)
+    (zmq:with-socket (epub ctx zmq:pub)
+      (setf (context bot) ctx
+            (event-pub-sock bot) epub)
     (unwind-protect (call-next-method)
-      (setf (context bot) ctx))))
+      (zmq:close (event-pub-sock epub))
+      (setf (context bot) nil
+            (event-pub-sock epub) nil)))))
 
 (defmethod run ((bot clubot) &key)
   (log-for (output clubot) "Using context: ~A" (context bot))
