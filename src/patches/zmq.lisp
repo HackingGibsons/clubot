@@ -1,5 +1,11 @@
 (in-package :zmq)
 
+;; New socktypes
+(export '(router dealer))
+(defconstant router xrep)
+(defconstant dealer xreq)
+
+;; New constants
 (export 'fd)
 (defconstant fd 14)
 
