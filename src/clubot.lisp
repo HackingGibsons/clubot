@@ -84,9 +84,9 @@ using `user' and `pass' to connect if needed."))
       (zmq:bind epub (format nil "tcp://*:~A" *event-port*))
 
       (unwind-protect (call-next-method)
-        (zmq:close (event-pub-sock epub))
+        (zmq:close (event-pub-sock bot))
         (setf (context bot) nil
-              (event-pub-sock epub) nil)))))
+              (event-pub-sock bot) nil)))))
 
 (defmethod run ((bot clubot) &key)
   (log-for (output clubot) "Using context: ~A" (context bot))
