@@ -45,9 +45,9 @@ using `user' and `pass' to connect if needed."))
                        :server server :port port
                        :username user :password pass))))
 
+(defcategory privmsg)
 (defmethod on-privmsg ((bot clubot) msg)
   (destructuring-bind (target text &key from) `(,@(irc:arguments msg) :from ,(irc:source msg))
-    (log-for (output clubot) "Target: ~S Self: ~S" target (irc:nickname (irc:user (connection bot))))
     (let* ((me (irc:nickname (irc:user (connection bot))))
            (msg (make-instance 'zmq:msg :data
                                (format nil ":PRIVMSG ~S ~@{~A~^ ~}"
@@ -61,7 +61,7 @@ using `user' and `pass' to connect if needed."))
                                                                            :from ,from
                                                                            :msg ,text))))))
       (zmq:send! (event-pub-sock bot) msg)
-      (log-for (output clubot) "<~A> [~A] ~A" from target text)))
+      (log-for (output privmsg) "<~A> [~A] ~A" from target text)))
   t)
 
 (defmethod add-hooks ((bot clubot))
