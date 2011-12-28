@@ -6,8 +6,11 @@
                #:zeromq
                #:cl-irc)
   :components ((:module "src" :components
-                        (;; Basics
-                         (:file "package")
+                        ((:module "patches" :components
+                                  ((:file "zmq")))
+
+                         (:file "package" :depends-on ("patches"))
                          (:file "logging" :depends-on ("package"))
 
+                         ;; App
                          (:file "clubot" :depends-on ("package" "logging"))))))
