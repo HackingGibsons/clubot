@@ -47,7 +47,7 @@ using `user' and `pass' to connect if needed."))
   "Add the hooks required for operation of `bot'"
   (flet ((renick (msg)
            (let ((nick (second (irc:arguments msg))))
-             (log-for (output clubot) "nick: ~A" nick)
+             (log-for (output clubot) "Nick in use: ~A" nick)
              (irc:nick (irc:connection msg) (format nil "~A-" nick)))))
 
     (irc:add-hook (connection bot) 'irc:irc-err_nicknameinuse-message
