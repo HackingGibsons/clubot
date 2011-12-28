@@ -20,6 +20,8 @@
    (context :initform nil
             :initarg :context
             :accessor context)
+   (event-pub-sock :initform nil
+                   :accessor event-pub-sock)
    (connection :initarg nil
                :initform :connection
                :accessor connection))
@@ -43,12 +45,38 @@ using `user' and `pass' to connect if needed."))
                        :server server :port port
                        :username user :password pass))))
 
+(defcategory privmsg)
+(defmethod on-privmsg ((bot clubot) msg)
+  (destructuring-bind (target text &key from) `(,@(irc:arguments msg) :from ,(irc:source msg))
+    (let* ((me (irc:nickname (irc:user (connection bot))))
+           (msg (make-instance 'zmq:msg :data
+                               (format nil ":PRIVMSG ~S ~@{~A~^ ~}"
+                                       (if (or (string= target me)
+                                               (arnesi:starts-with text me))
+                                           :mention
+                                           :chatter)
+                                       target from
+                                       (json:encode-json-plist-to-string `(:type :privmsg
+                                                                           :time ,(get-universal-time)
+                                                                           :target ,target
+                                                                           :self ,me
+                                                                           :from ,from
+                                                                           :msg ,text))))))
+      (zmq:send! (event-pub-sock bot) msg)
+      (log-for (output privmsg) "<~A> [~A] ~A" from target text)))
+  t)
+
 (defmethod add-hooks ((bot clubot))
+  (irc:add-hook (connection bot) 'irc:irc-privmsg-message (arnesi:curry #'on-privmsg bot)))
+
+(defmethod add-hooks :after ((bot clubot))
   "Add the hooks required for operation of `bot'"
   (flet ((renick (msg)
-           (let ((nick (second (irc:arguments msg))))
+           (let* ((nick (second (irc:arguments msg)))
+                  (new (format nil "~A-" nick)))
              (log-for (output clubot) "Nick in use: ~A" nick)
-             (irc:nick (irc:connection msg) (format nil "~A-" nick)))))
+             (setf (irc:nickname (irc:user (connection bot))) new)
+             (irc:nick (irc:connection msg) new))))
 
     (irc:add-hook (connection bot) 'irc:irc-err_nicknameinuse-message
                   #'renick)))
@@ -60,13 +88,34 @@ using `user' and `pass' to connect if needed."))
 (defmethod run :around ((bot clubot) &key)
   "Set up the ZMQ context and other in-flight parameters for the `bot'"
   (zmq:with-context (ctx 1)
-    (setf (context bot) ctx)
-    (unwind-protect (call-next-method)
-      (setf (context bot) ctx))))
+    (zmq:with-socket (epub ctx zmq:pub)
+      (setf (context bot) ctx
+            (event-pub-sock bot) epub)
+
+      ;;Bind up the event broadcast
+      (zmq:bind epub (format nil "ipc:///tmp/clubot.~A.events.pub" (nick bot)))
+      (zmq:bind epub (format nil "tcp://*:~A" *event-port*))
+
+      (unwind-protect (call-next-method)
+        (zmq:close (event-pub-sock bot))
+        (setf (context bot) nil
+              (event-pub-sock bot) nil)))))
 
 (defmethod run ((bot clubot) &key)
   (log-for (output clubot) "Using context: ~A" (context bot))
-  (irc:read-message-loop (connection bot)))
+  (iolib.multiplex:with-event-base (ev)
+    (flet ((connection-fd (c)
+             "HACK: Get the unix FD under the connection."
+             (sb-bsd-sockets:socket-file-descriptor (usocket:socket (irc::socket c))))
+
+           (irc-message-or-exit (fd event ex)
+             "Read an IRC event, and if we find none available, exit the event loop"
+             (declare (ignorable fd event ex))
+             (unless (irc:read-message (connection bot))
+               (iolib.multiplex:exit-event-loop ev))))
+
+      (iolib.multiplex:set-io-handler ev (connection-fd (connection bot)) :read #'irc-message-or-exit)
+      (iolib.multiplex:event-dispatch ev))))
 
 (defmethod initialize-instance :after ((bot clubot) &key)
   "Bind a connection to the bot instance"
@@ -76,12 +125,15 @@ using `user' and `pass' to connect if needed."))
 ;; Entry
 (defvar *clubot* nil
   "The current clubot if one is running.")
+(defvar *event-port* 14532
+  "The port we bind on")
 
 (defgeneric clubot (&key)
   (:documentation "The main entry of the clubot"))
 
 (defmethod clubot (&key (nick "clubot") (host "localhost") (port 6667))
-  (let ((*clubot* (make-instance 'clubot :nick nick
-                                 :irc-host host :irc-port port)))
+  (let ((bot (make-instance 'clubot :nick nick
+                            :irc-host host :irc-port port)))
+    (setf *clubot* bot)
     (log-for (output clubot) "Booting..")
-    (run *clubot*)))
+    (run bot)))

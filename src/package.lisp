@@ -4,6 +4,7 @@
   (:export :start-logging
            :stop-logging
 
+           :*clubot*
            :clubot))
 
 (in-package :clubot)
