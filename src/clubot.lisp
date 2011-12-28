@@ -56,7 +56,9 @@ using `user' and `pass' to connect if needed."))
                                            :mention
                                            :chatter)
                                        target from
-                                       (json:encode-json-plist-to-string `(:target ,target
+                                       (json:encode-json-plist-to-string `(:type :privmsg
+                                                                           :time ,(get-universal-time)
+                                                                           :target ,target
                                                                            :self ,me
                                                                            :from ,from
                                                                            :msg ,text))))))
