@@ -29,8 +29,8 @@ a `:KEYWORD` describing its type. The messages listed bellow will use this conve
 Emitted when the bot hears anything. The format for the message is:
 
 ```
-:PRIVMSG :CHATTER #somechan Origin_nick {"target":"target","self":"clubot","from":"Origin_nick","msg":"Message text"}
+:PRIVMSG :CHATTER #somechan Origin_nick {"type":"privmsg",:"time":1230918203810923,"target":"target","self":"clubot","from":"Origin_nick","msg":"Message text"}
 ```
 
 The keyword `:CHATTER` will be `:MENTION` if the message begins with the bots nick. The message order is so
-for easy message filtering with `zmq:subscribe` by consumers.
+for easy message filtering with `zmq:subscribe` by consumers. `time` is expressed as universal time.
