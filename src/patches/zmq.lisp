@@ -6,8 +6,9 @@
 (defconstant dealer xreq)
 
 ;; New constants
-(export 'fd)
+(export '(fd events))
 (defconstant fd 14)
+(defconstant events 15)
 
 (export 'send!)
 (defun send! (sock msg &optional flags (count 0))
