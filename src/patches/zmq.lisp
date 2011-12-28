@@ -1,5 +1,8 @@
 (in-package :zmq)
 
+(export 'fd)
+(defconstant fd 14)
+
 (export 'send!)
 (defun send! (sock msg &optional flags (count 0))
   "Keep trying to `zmq:send' while it keeps returning -1 with an errno
