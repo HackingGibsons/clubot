@@ -17,6 +17,9 @@
              :initarg :irc-password
              :accessor irc-pass)
 
+   (context :initarg nil
+            :initarg :context
+            :accessor context)
    (connection :initarg nil
                :initform :connection
                :accessor connection))
@@ -41,6 +44,7 @@ using `user' and `pass' to connect if needed."))
                        :username user :password pass))))
 
 (defmethod add-hooks ((bot clubot))
+  "Add the hooks required for operation of `bot'"
   (flet ((renick (msg)
            (let ((nick (second (irc:arguments msg))))
              (log-for (output clubot) "nick: ~A" nick)
@@ -50,12 +54,22 @@ using `user' and `pass' to connect if needed."))
                   #'renick)))
 
 (defmethod run :before ((bot clubot) &key)
+  "Call `add-hooks' on the given bot to make sure it does something"
   (add-hooks bot))
 
+(defmethod run :around ((bot clubot) &key)
+  "Set up the ZMQ context and other in-flight parameters for the `bot'"
+  (zmq:with-context (ctx 1)
+    (setf (context bot) ctx)
+    (unwind-protect (call-next-method)
+      (setf (context bot) ctx))))
+
 (defmethod run ((bot clubot) &key)
+  (log-for (output clubot) "Using context: ~A" (context bot))
   (irc:read-message-loop (connection bot)))
 
 (defmethod initialize-instance :after ((bot clubot) &key)
+  "Bind a connection to the bot instance"
   (with-slots (connection nick irc-host irc-port irc-user irc-pass) bot
     (connect bot nick irc-host irc-port :user irc-user :pass irc-pass)))
 
@@ -71,6 +85,3 @@ using `user' and `pass' to connect if needed."))
                                  :irc-host host :irc-port port)))
     (log-for (output clubot) "Booting..")
     (run *clubot*)))
-
-
-
