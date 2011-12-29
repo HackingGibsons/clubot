@@ -48,8 +48,26 @@ using `user' and `pass' to connect if needed."))
                        :username user :password pass))))
 
 (defcategory request)
+(defmethod send-reply ((bot clubot) id data)
+  "Send a reply using `data' over the `request-socket' to the peer with the identity `id'"
+  (zmq:send! (request-sock bot) (make-instance 'zmq:msg :data id) zmq:sndmore)
+  (zmq:send! (request-sock bot) (make-instance 'zmq:msg :data data)))
+
 (defmethod handle-request ((bot clubot) type event id)
   (log-for (output request) "Handling request: ~S: ~A" type event))
+
+(defmethod handle-request ((bot clubot) (type (eql :topic)) event id)
+  (let* ((channel (getf event :channel))
+         (chan-obj (and channel
+                        (gethash channel (irc:channels (connection bot)))))
+         (topic (and chan-obj (irc:topic chan-obj))))
+    (when topic
+      (send-reply bot id
+                  (json:encode-json-plist-to-string `(:type ,type
+                                                       :channel ,channel
+                                                       :topic ,topic))))))
+
+
 
 (defmethod handle-request ((bot clubot) (type (eql :speak)) event id)
   (log-for (output request) "Handling speak of ~A" event)
