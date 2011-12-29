@@ -1,6 +1,11 @@
 (in-package :clubot)
 
+(defmethod add-hooks ((bot clubot))
+  "Add the generic hooks"
+  (irc:add-hook (connection bot) 'irc:irc-privmsg-message (arnesi:curry #'on-privmsg bot)))
+
 (defmethod on-privmsg ((bot clubot) msg)
+  "Handler for IRC PRIVMSG messages"
   (destructuring-bind (target text &key from) `(,@(irc:arguments msg) :from ,(irc:source msg))
     (let* ((me (irc:nickname (irc:user (connection bot))))
            (msg (make-instance 'zmq:msg :data

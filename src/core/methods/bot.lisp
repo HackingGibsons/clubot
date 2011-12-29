@@ -8,10 +8,6 @@
                        :server server :port port
                        :username user :password pass))))
 
-(defmethod add-hooks ((bot clubot))
-  "Add the generic hooks"
-  (irc:add-hook (connection bot) 'irc:irc-privmsg-message (arnesi:curry #'on-privmsg bot)))
-
 (defmethod add-hooks :after ((bot clubot))
   "Add the hooks required for operation of `bot'"
   (flet ((renick (msg)

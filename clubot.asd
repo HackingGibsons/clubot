@@ -19,9 +19,11 @@
                                   ((:file "clubot")
                                    (:file "generics" :depends-on ("clubot"))
                                    (:module "methods" :depends-on ("generics") :components
-                                            ((:file "bot")
-                                             (:file "request")
-                                             (:file "irc")))))
+                                            ((:file "communication")
+
+                                             (:file "bot")
+                                             (:file "request" :depends-on ("communication"))
+                                             (:file "irc" :depends-on ("communication"))))))
 
                          ;; App
                          (:file "clubot" :depends-on ("core"))))))
