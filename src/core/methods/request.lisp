@@ -15,10 +15,18 @@ there are no problems with it"
     (when type
       (handle-request bot (intern (string-upcase type) :keyword) msg id))))
 
+;; Request handler definition helper
+(defmacro defhandler (type arglist &body body)
+  (let* ((lambda-list (copy-seq arglist))
+         (type-sym (second lambda-list)))
+    (setf (second lambda-list) (list type-sym `(eql ,type)))
+
+    `(defmethod handle-request ,lambda-list
+       ,@body)))
 
 ;; Specific request handlers
-(defmethod handle-request ((bot clubot) (type (eql :topic)) event id)
-  "Handle a topic request from a client"
+(defhandler :topic ((bot clubot) type event id)
+  "Handle the `:topic' type of message by replying with a channel topic."
   (let* ((channel (getf event :channel))
          (chan-obj (and channel
                         (gethash channel (irc:channels (connection bot))))))
@@ -29,7 +37,7 @@ there are no problems with it"
                                                         :topic ,(irc:topic chan-obj))))
         (send-error bot id "Not in channel ~S" channel))))
 
-(defmethod handle-request ((bot clubot) (type (eql :speak)) event id)
+(defhandler :speak ((bot clubot) type event id)
   "Handle a speak request from a client"
   (log-for (output request) "Handling speak of ~A" event)
   (let ((target (getf event :target))
