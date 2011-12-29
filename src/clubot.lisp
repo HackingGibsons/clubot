@@ -48,8 +48,27 @@ using `user' and `pass' to connect if needed."))
                        :username user :password pass))))
 
 (defcategory request)
+(defmethod handle-request ((bot clubot) type event id)
+  (log-for (output request) "Handling request: ~S: ~A" type event))
+
+(defmethod handle-request ((bot clubot) (type (eql :speak)) event id)
+  (log-for (output request) "Handling speak of ~A" event)
+  (let ((target (getf event :target))
+        (msg (getf event :msg)))
+    (when (and target msg)
+      (log-for (output request) "Speaking ~S => ~S" target msg)
+      (irc:privmsg (connection bot) target msg))))
+
+(defmethod on-request :around ((bot clubot) msg id)
+  (let ((request (ignore-errors
+                   (alexandria:alist-plist (json:decode-json-from-string msg)))))
+    (when request (call-next-method bot request id))))
+
 (defmethod on-request ((bot clubot) msg id)
-  (log-for (output request) "Got request: ~S" msg))
+  (log-for (output request) "Got request: ~S" msg)
+  (let ((type (getf msg :type)))
+    (when type
+      (handle-request bot (intern (string-upcase type) :keyword) msg id))))
 
 (defcategory privmsg)
 (defmethod on-privmsg ((bot clubot) msg)
@@ -123,6 +142,7 @@ using `user' and `pass' to connect if needed."))
 
            (maybe-service-zmq-request (fd event ex)
              "See if we have an event on the ZMQ request socket"
+             (declare (ignorable fd event ex))
              (let ((events (zmq:getsockopt (request-sock bot) zmq:events)))
                (unless (zerop (boole boole-and events zmq:pollin))
                  (let ((id (make-instance 'zmq:msg))
