@@ -39,6 +39,17 @@ sits on.
 
 This message generates no reply.
 
+### Topic
+```json
+{"type":"topic", "channel":"#somechan"}
+```
+
+Replies with the TOPIC in of the channel named by `channel` in the following format. This is the only reply.
+
+```json
+{"type":"topic", "channel":"#somechan", "topic":"topic"}
+```
+
 ## Broadcast messages
 ### :PRIVMSG
 ```
