@@ -14,6 +14,9 @@ using `user' and `pass' to connect if needed."))
 ;; 0MQ Communication
 (defcategory request)
 
+(defgeneric broadcast (bot type data &rest format)
+  (:documentation "Broadcast a message formatted by `data' and `format' as by #'format
+prefixed with `type' then a space to the `event-pub-sock' of the `bot'"))
 (defgeneric send-reply (bot id data)
   (:documentation "Send a message `data' to the 0MQ peer of `bot' identified by `id' using the `request-sock'"))
 (defgeneric send-error (bot id error &rest error-args)

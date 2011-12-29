@@ -11,3 +11,9 @@
          (es (json:encode-json-plist-to-string e)))
     (send-reply bot id es)))
 
+(defmethod broadcast ((bot clubot) type data &rest format)
+  "Broadcast a message in the format of '{type} {data}'
+from the `event-pub-sock' of `bot'"
+  (let ((message (if format (apply #'format nil data format) data)))
+    (zmq:send! (event-pub-sock bot)
+               (make-instance 'zmq:msg :data (format nil "~S ~A" type message)))))
