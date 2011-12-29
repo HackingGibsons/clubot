@@ -14,5 +14,11 @@
                          (:file "package" :depends-on ("patches"))
                          (:file "logging" :depends-on ("package"))
 
+                         ;; Core
+                         (:module "core" :depends-on ("package" "logging") :components
+                                  ((:file "clubot")
+                                   (:file "generics" :depends-on ("clubot"))
+                                   (:file "methods" :depends-on ("generics"))))
+
                          ;; App
-                         (:file "clubot" :depends-on ("package" "logging"))))))
+                         (:file "clubot" :depends-on ("core"))))))
