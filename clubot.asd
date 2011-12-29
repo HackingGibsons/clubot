@@ -18,7 +18,10 @@
                          (:module "core" :depends-on ("package" "logging") :components
                                   ((:file "clubot")
                                    (:file "generics" :depends-on ("clubot"))
-                                   (:file "methods" :depends-on ("generics"))))
+                                   (:module "methods" :depends-on ("generics") :components
+                                            ((:file "bot")
+                                             (:file "request")
+                                             (:file "irc")))))
 
                          ;; App
                          (:file "clubot" :depends-on ("core"))))))

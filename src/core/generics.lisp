@@ -23,6 +23,7 @@ using `user' and `pass' to connect if needed."))
 (defcategory privmsg)
 
 (defgeneric handle-request (bot type event id)
+  (:method (bot type event id) "Default handler is a pass-through" nil)
   (:documentation "Handles a request of `bot' by a peer identified by `id' of type `type' as a keyword with
 the message stored in `event'"))
 (defgeneric on-request (bot msg id)
