@@ -8,9 +8,12 @@
         (decode-universal-time (get-universal-time))
       (format nil "[~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D]" year month date hour minute second)))
 
-(defun start-logging (&key (output t) (warning t) (trace t))
-  (macrolet ((clean-list (&body forms)
-               `(remove nil (list ,@forms))))
+(macrolet ((clean-list (&body forms)
+             "Produce a list produced by evaluating forms and removing any resulting nils"
+             `(remove nil (list ,@forms))))
+
+  (defun start-logging (&key (output t) (warning t) (trace t))
+    "Start the log senders on any of the given three levels. Pass `nil' to a &key skip a sender."
     (apply #'values
            (clean-list
             (when output
@@ -29,11 +32,11 @@
               (log5:start-sender 'trace
                                  (log5:stream-sender :location *error-output*)
                                  :category-spec '(dribble+)
-                                 :output-spec '(human-time log5:category log5:message)))))))
+                                 :output-spec '(human-time log5:category log5:message))))))
 
-(defun stop-logging (&key (output t) (warning t) (trace t))
-  (macrolet ((clean-list (&body forms)
-               `(remove nil (list ,@forms))))
+  (defun stop-logging (&key (output t) (warning t) (trace t))
+    "Stop the logging on the given senders. Pass `nil' for a class of logging to prevent it from
+being shut down."
     (apply #'values
            (clean-list
             (when output
