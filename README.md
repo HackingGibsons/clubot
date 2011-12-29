@@ -30,6 +30,12 @@ of sockets in use a single request may generate 0 to N replies. The documentatio
 to treat any given message.
 
 ## Request messages
+If a request fails and generates an error result it will be sent in the following format:
+
+```json
+{"type":"error", "error":"error description"}
+```
+
 ### Speak
 ```json
 {"type":"speak", "target":"#channel", "msg":"Message text!"}

@@ -53,21 +53,24 @@ using `user' and `pass' to connect if needed."))
   (zmq:send! (request-sock bot) (make-instance 'zmq:msg :data id) zmq:sndmore)
   (zmq:send! (request-sock bot) (make-instance 'zmq:msg :data data)))
 
+(defmethod send-error ((bot clubot) id error &rest error-args)
+  (let* ((e `(:type :error :error ,(apply #'format nil error error-args)))
+         (es (json:encode-json-plist-to-string e)))
+    (send-reply bot id es)))
+
 (defmethod handle-request ((bot clubot) type event id)
   (log-for (output request) "Handling request: ~S: ~A" type event))
 
 (defmethod handle-request ((bot clubot) (type (eql :topic)) event id)
   (let* ((channel (getf event :channel))
          (chan-obj (and channel
-                        (gethash channel (irc:channels (connection bot)))))
-         (topic (and chan-obj (irc:topic chan-obj))))
-    (when topic
-      (send-reply bot id
-                  (json:encode-json-plist-to-string `(:type ,type
-                                                       :channel ,channel
-                                                       :topic ,topic))))))
-
-
+                        (gethash channel (irc:channels (connection bot))))))
+    (if chan-obj
+        (send-reply bot id
+                    (json:encode-json-plist-to-string `(:type ,type
+                                                        :channel ,channel
+                                                        :topic ,(irc:topic chan-obj))))
+        (send-error bot id "Not in channel ~S" channel))))
 
 (defmethod handle-request ((bot clubot) (type (eql :speak)) event id)
   (log-for (output request) "Handling speak of ~A" event)
