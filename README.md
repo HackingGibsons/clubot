@@ -26,7 +26,7 @@ and a ZMQ:ROUTER socket to `ipc:///tmp/clubot.name.request.router.sock` and `tcp
 Broadcast messagse are generaly state information from the IRC network like messages of other peers.
 
 Requests are sent from a ZMQ:DEALER socket by a client and take the form of JSON strings. Due to the type
-of sockets in use a single request may generate 0 to N replies. The documentation bellow will indicate how
+of sockets in use a single request may generate 0 to N replies. The documentation below will indicate how
 to treat any given message.
 
 ## Request messages
