@@ -124,7 +124,7 @@ using `user' and `pass' to connect if needed."))
         (zmq:bind epub (format nil "ipc:///tmp/clubot.~A.events.pub.sock" (nick bot)))
         (zmq:bind epub (format nil "tcp://*:~A" *event-port*))
 
-        (zmq:bind req (format nil "ipc:///tmp/clubot.~A.request.dealer.sock" (nick bot)))
+        (zmq:bind req (format nil "ipc:///tmp/clubot.~A.request.router.sock" (nick bot)))
         (zmq:bind req (format nil "tcp://*:~A" *request-port*))
 
         (unwind-protect (call-next-method)
