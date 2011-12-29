@@ -45,7 +45,7 @@ This message generates no reply.
 :PRIVMSG :CHATTER #somechan Origin_nick {"type":"privmsg",:"time":1230918203810923,"target":"target","self":"clubot","from":"Origin_nick","msg":"Message text"}
 ```
 
-Emitted when the bot hears anything. The format for the message is:
+Emitted when the bot hears anything.
 
-The keyword `:CHATTER` will be `:MENTION` if the message begins with the bots nick. The message order is so
+The keyword `:CHATTER` will become `:MENTION` if the message begins with the bot's nick. The message order is so
 for easy message filtering with `zmq:subscribe` by consumers. `time` is expressed as universal time.
