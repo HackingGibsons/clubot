@@ -43,6 +43,7 @@
 
         (unwind-protect (call-next-method)
           (zmq:close (event-pub-sock bot))
+          (zmq:close (request-sock bot))
           (setf (context bot) nil
                 (event-pub-sock bot) nil))))))
 
