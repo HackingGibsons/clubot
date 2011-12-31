@@ -43,6 +43,21 @@ there are no problems with it"
               (json:encode-json-plist-to-string `(:type ,type
                                                   :nick ,(irc:nickname (irc:user (connection bot)))))))
 
+(defhandler :join ((bot clubot) type event id)
+  "Handles the `:join' type of message which asks the bot to join a channel."
+  (let ((channel (getf event :channel)))
+    (if (and channel (stringp channel))
+        (irc:join (connection bot) channel)
+        (send-error bot id "Malformed channel: ~S" channel))))
+
+(defhandler :part ((bot clubot) type event id)
+  "Handles the `:part' type of message which asks the bot to part a channel with an optional `:reason'"
+  (let ((channel (getf event :channel))
+        (reason (getf event :reason)))
+    (if (and channel (stringp channel))
+        (irc:part (connection bot) channel reason)
+        (send-error bot id "Malformed channel to part: ~S" channel))))
+
 (defhandler :speak ((bot clubot) type event id)
   "Handle a speak request from a client"
   (log-for (output request) "Handling speak of ~A" event)

@@ -67,6 +67,24 @@ Replies with the current nick of the bot
 {"type":"nick", "nick":"botnick"}
 ```
 
+### Part
+```
+{"type":"part", "channel":"#channel", "reason":"Optional part reason"}
+```
+
+Asks the bot to part the named channel. The reason component is entirely optional.
+
+**TODO:** No rely is generated, the part will be announced over the broadcast channels.
+
+### Join
+```
+{"type":"join", "channel":"#channel"}
+```
+
+Asks the bot to join the named channel.
+
+**TODO:** No rely is generated, the join will be announced over the broadcast channels.
+
 ## Broadcast messages
 ### :BOOT
 ```
