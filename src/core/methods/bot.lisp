@@ -80,4 +80,8 @@
                                       :read #'maybe-service-zmq-request)
       (iolib.multiplex:set-io-handler ev (connection-fd (connection bot))
                                       :read #'irc-message-or-exit)
+
+      (broadcast bot :boot (json:encode-json-plist-to-string
+                            `(:type :boot :time ,(get-universal-time)
+                              :nick (irc:nickname (irc:user (connection bot))))))
       (iolib.multiplex:event-dispatch ev))))

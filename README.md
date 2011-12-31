@@ -57,6 +57,13 @@ Replies with the TOPIC in of the channel named by `channel` in the following for
 ```
 
 ## Broadcast messages
+### :BOOT
+```
+:BOOT {"type":"boot","time":123123312,"nick":"botname"}
+```
+
+Emitted when the bot reboots to notify any downstream peers.
+
 ### :PRIVMSG
 ```
 :PRIVMSG :CHATTER #somechan Origin_nick {"type":"privmsg",:"time":1230918203810923,"target":"target","self":"clubot","from":"Origin_nick","msg":"Message text"}
