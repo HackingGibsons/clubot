@@ -37,6 +37,12 @@ there are no problems with it"
                                                         :topic ,(irc:topic chan-obj))))
         (send-error bot id "Not in channel ~S" channel))))
 
+(defhandler :nick ((bot clubot) type event id)
+  "Handle the `:nick' type of message by replying with the current nick."
+  (send-reply bot id
+              (json:encode-json-plist-to-string `(:type ,type
+                                                  :nick ,(irc:nickname (irc:user (connection bot)))))))
+
 (defhandler :speak ((bot clubot) type event id)
   "Handle a speak request from a client"
   (log-for (output request) "Handling speak of ~A" event)

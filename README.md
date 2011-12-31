@@ -56,6 +56,17 @@ Replies with the TOPIC in of the channel named by `channel` in the following for
 {"type":"topic", "channel":"#somechan", "topic":"topic"}
 ```
 
+### Nick
+```json
+{"type":"nick"}
+```
+
+Replies with the current nick of the bot
+
+```json
+{"type":"nick", "nick":"botnick"}
+```
+
 ## Broadcast messages
 ### :BOOT
 ```
