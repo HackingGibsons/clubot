@@ -68,7 +68,7 @@ Replies with the current nick of the bot
 ```
 
 ### Part
-```
+```json
 {"type":"part", "channel":"#channel", "reason":"Optional part reason"}
 ```
 
@@ -77,7 +77,7 @@ Asks the bot to part the named channel. The reason component is entirely optiona
 **TODO:** No rely is generated, the part will be announced over the broadcast channels.
 
 ### Join
-```
+```json
 {"type":"join", "channel":"#channel"}
 ```
 
