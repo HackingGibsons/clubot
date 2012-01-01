@@ -54,21 +54,21 @@
   (log-for (output clubot) "Using context: ~A" (context bot))
   (let (done)
     (flet ((connection-fd (c)
-	       "HACK: Get the unix FD under the connection."
-	       (sb-bsd-sockets:socket-file-descriptor (usocket:socket (irc::socket c))))
+	     "HACK: Get the unix FD under the connection."
+	     (sb-bsd-sockets:socket-file-descriptor (usocket:socket (irc::socket c))))
 
-	     (maybe-service-zmq-request (socket)
-	       "See if we have an event on the ZMQ request socket"
-	       (let ((id (make-instance 'zmq:msg))
-		     (msg (make-instance 'zmq:msg)))
-		 (zmq:recv! socket id)
-		 (zmq:recv! socket msg)
-		 (on-request bot (zmq:msg-data-as-string msg) (zmq:msg-data-as-array id))))
+	   (maybe-service-zmq-request (socket)
+	     "See if we have an event on the ZMQ request socket"
+	     (let ((id (make-instance 'zmq:msg))
+		   (msg (make-instance 'zmq:msg)))
+	       (zmq:recv! socket id)
+	       (zmq:recv! socket msg)
+	       (on-request bot (zmq:msg-data-as-string msg) (zmq:msg-data-as-array id))))
 
-	     (irc-message-or-exit ()
-	       "Read an IRC event."
-	       (unless (irc:read-message (connection bot))
-		 (setf done :done))))
+	   (irc-message-or-exit ()
+	     "Read an IRC event."
+	     (unless (irc:read-message (connection bot))
+	       (setf done :done))))
 
       (broadcast bot :boot (json:encode-json-plist-to-string
 			    `(:type :boot 
