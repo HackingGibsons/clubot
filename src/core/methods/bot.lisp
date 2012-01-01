@@ -52,36 +52,35 @@
 (defmethod run ((bot clubot) &key)
   "Set up and run the main event loop driving the IRC and 0MQ communication."
   (log-for (output clubot) "Using context: ~A" (context bot))
-  (iolib.multiplex:with-event-base (ev)
-    (flet ((connection-fd (c)
-             "HACK: Get the unix FD under the connection."
-             (sb-bsd-sockets:socket-file-descriptor (usocket:socket (irc::socket c))))
+  (labels ((connection-fd (c)
+	     "HACK: Get the unix FD under the connection."
+	     (sb-bsd-sockets:socket-file-descriptor (usocket:socket (irc::socket c))))
 
-           (maybe-service-zmq-request (fd event ex)
-             "See if we have an event on the ZMQ request socket"
-             (declare (ignorable fd event ex))
-             (let ((events (zmq:getsockopt (request-sock bot) zmq:events)))
-               (unless (zerop (boole boole-and events zmq:pollin))
-                 (let ((id (make-instance 'zmq:msg))
-                       (msg (make-instance 'zmq:msg)))
-                   (zmq:recv! (request-sock bot) id)
-                   (zmq:recv! (request-sock bot) msg)
+	   (maybe-service-zmq-request (socket)
+	     "See if we have an event on the ZMQ request socket"
+	     (let ((id (make-instance 'zmq:msg))
+		   (msg (make-instance 'zmq:msg)))
+	       (zmq:recv! socket id)
+	       (zmq:recv! socket msg)
+	       (on-request bot (zmq:msg-data-as-string msg) (zmq:msg-data-as-array id))))
 
-                   (on-request bot (zmq:msg-data-as-string msg) (zmq:msg-data-as-array id))))))
+	   (irc-message-or-exit ()
+	     "Read an IRC event."
+	     (irc:read-message (connection bot))))
 
+    (broadcast bot :boot (json:encode-json-plist-to-string
+			  `(:type :boot 
+			    :time ,(get-universal-time)
+			    :nick (irc:nickname (irc:user (connection bot))))))
 
-           (irc-message-or-exit (fd event ex)
-             "Read an IRC event, and if we find none available, exit the event loop"
-             (declare (ignorable fd event ex))
-             (unless (irc:read-message (connection bot))
-               (iolib.multiplex:exit-event-loop ev))))
-
-      (iolib.multiplex:set-io-handler ev (zmq:getsockopt (request-sock bot) zmq:fd)
-                                      :read #'maybe-service-zmq-request)
-      (iolib.multiplex:set-io-handler ev (connection-fd (connection bot))
-                                      :read #'irc-message-or-exit)
-
-      (broadcast bot :boot (json:encode-json-plist-to-string
-                            `(:type :boot :time ,(get-universal-time)
-                              :nick (irc:nickname (irc:user (connection bot))))))
-      (iolib.multiplex:event-dispatch ev))))
+    ;; Can't use zmq:with-polls because we need to use a raw fd
+    (let ((items  (list (make-instance 'zmq:pollitem :socket (request-sock bot) :events zmq:pollin)
+			(make-instance 'zmq:pollitem :fd (connection-fd (connection bot)) :events zmq:pollin))))
+      (do* ((revents (zmq:poll items) (zmq:poll items))
+	    (req-ready (first revents) (first revents))
+	    (irc-ready (second revents) (second revents)))
+	   (nil nil) ;; I DON'T KNOW HOW TO EXIT?!
+	(cond ((= req-ready zmq:pollin)
+	       (maybe-service-zmq-request (request-sock bot)))
+	      ((= irc-ready zmq:pollin) 
+	       (irc-message-or-exit)))))))
