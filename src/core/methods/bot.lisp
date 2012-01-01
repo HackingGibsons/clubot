@@ -76,7 +76,7 @@
     ;; Can't use zmq:with-polls because we need to use a raw fd
     (let ((items  (list (make-instance 'zmq:pollitem :socket (request-sock bot) :events zmq:pollin)
 			(make-instance 'zmq:pollitem :fd (connection-fd (connection bot)) :events zmq:pollin))))
-      (do* ((revents (zmq:poll items) (zmq:poll items))
+      (do* ((revents (zmq:poll items :retry t) (zmq:poll items :retry t))
 	    (req-ready (first revents) (first revents))
 	    (irc-ready (second revents) (second revents)))
 	   (nil nil) ;; I DON'T KNOW HOW TO EXIT?!
