@@ -16,5 +16,5 @@
                                                         :self ,me
                                                         :from ,from
                                                         :msg ,text))))
-      (broadcast bot :privmsg "~S ~@{~A~^ ~}" style target from message))))
+      (broadcast bot :privmsg "~S ~@{~A~^ ~}" style (if (string= target me) :self target) from message))))
 
