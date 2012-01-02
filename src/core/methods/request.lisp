@@ -61,11 +61,15 @@ there are no problems with it"
 (defhandler :speak ((bot clubot) type event id)
   "Handle a speak request from a client"
   (log-for (output request) "Handling speak of ~A" event)
-  (let ((target (getf event :target))
-        (msg (getf event :msg)))
+  (let* ((target (getf event :target))
+	 (msg (getf event :msg))
+	 (seq (split-sequence #\Newline string :test #'string-equal)))
+    (log-for (output request) "Msg ~S sequence: ~S~%" msg seq)
     (when (and target msg)
-      (log-for (output request) "Speaking ~S => ~S" target msg)
-      (irc:privmsg (connection bot) target msg))))
+      (loop for string in seq
+	 do
+	   (log-for (output request) "Speaking ~S => ~A" target string)
+	   (irc:privmsg (connection bot) target string)))))
 
 (defhandler :channels ((bot clubot) type event id)
   "Handle a request for a list of the current channels"
