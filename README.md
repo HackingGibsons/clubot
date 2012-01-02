@@ -112,17 +112,19 @@ Emitted when the bot reboots to notify any downstream peers.
 
 ### :PART
 ```
-:PART #somechannel {"part":"#somechannel", "reason":"reason", "time":12093123}
+:PART who_nick #somechannel {"type":"part", "channel":"#somechannel", "who":"who_nick", "reason":"reason", "time":12093123}
 ```
 
 Emitted when the bot parts a channel. The time is universal time. The reason is always a string, sometimes empty.
+If the bot itself is doing the parting the who_nick in the subscription portion of the message will be `:SELF`
 
 ### :JOIN
 ```
-:JOIN #somechannel {"join":"#somechannel", "time":12093123}
+:JOIN somenick #somechannel {"type":"join", "who":"somenick", "channel":"#somechannel", "time":12093123}
 ```
 
-Emitted when the bot joins a channel. The time is universal time.
+Emitted when the bot joins a channel. The time is universal time. If the bot itself is doing the joining the who nick
+in the subscription prefix will appear as `:SELF`
 
 ### :PRIVMSG
 ```

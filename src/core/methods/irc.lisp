@@ -10,21 +10,25 @@
 (defmethod on-join ((bot clubot) msg)
   "Handler for the IRC JOIN message."
   (log-for (trace irc) "Join message: ~A" msg)
-  (let ((channel (car (irc:arguments msg))))
+  (let ((channel (car (irc:arguments msg)))
+        (me (irc:nickname (irc:user (connection bot))))
+        (who (irc:source msg)))
     (broadcast bot :join
-               "~@{~A~^ ~}" channel
-               (json:encode-json-plist-to-string `(:type :join :channel ,channel :time ,(get-universal-time))))
+               "~@{~A~^ ~}" (if (string= me who) ":SELF" who) channel
+               (json:encode-json-plist-to-string `(:type :join :who ,who :channel ,channel :time ,(get-universal-time))))
     nil))
 
 (defmethod on-part ((bot clubot) msg)
   "Handler for the IRC PART message."
   (destructuring-bind (channel &optional (reason "")) (irc:arguments msg)
-    (log-for (trace irc) "PART message: ~A => ~S" channel reason)
-    (remhash channel (irc:channels (connection bot)))
-    (broadcast bot :part
-               "~@{~A~^ ~}" channel
-               (json:encode-json-plist-to-string `(:type :part :channel ,channel :reason ,reason :time ,(get-universal-time))))
-    nil))
+    (let ((me (irc:nickname (irc:user (connection bot))))
+          (who (irc:source msg)))
+      (log-for (trace irc) "PART message: ~A => ~S" channel reason)
+      (remhash channel (irc:channels (connection bot)))
+      (broadcast bot :part
+                 "~@{~A~^ ~}" (if (string= me who) ":SELF" who) channel
+                 (json:encode-json-plist-to-string `(:type :part :who ,who :channel ,channel :reason ,reason :time ,(get-universal-time))))
+      nil)))
 
 (defmethod on-privmsg ((bot clubot) msg)
   "Handler for IRC PRIVMSG messages"
