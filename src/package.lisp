@@ -4,6 +4,7 @@
   (:export :start-logging
            :stop-logging
 
+           :*git-revision*
            :version-string
            :*clubot*
            :clubot))

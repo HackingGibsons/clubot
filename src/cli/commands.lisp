@@ -8,7 +8,7 @@
                    (server "The IRC host to connect to")
                    (port "The IRC port to use"))
     (let ((nick (or nick "clubot"))
-          (server (or server "localhost")) (port (or (parse-integer port :junk-allowed t) 6667)))
+          (server (or server "localhost")) (port (or (parse-integer (or port "") :junk-allowed t) 6667)))
 
       (when logging
         (clubot:start-logging :output t :warning t :trace nil))
