@@ -93,6 +93,20 @@ Asks the bot to join the named channel.
 
 Emitted when the bot reboots to notify any downstream peers.
 
+### :PART
+```
+:PART #somechannel {"part":"#somechannel", "reason":"reason", "time":12093123}
+```
+
+Emitted when the bot parts a channel. The time is universal time. The reason is always a string, sometimes empty.
+
+### :JOIN
+```
+:JOIN #somechannel {"join":"#somechannel", "time":12093123}
+```
+
+Emitted when the bot joins a channel. The time is universal time.
+
 ### :PRIVMSG
 ```
 :PRIVMSG :CHATTER #somechan Origin_nick {"type":"privmsg",:"time":1230918203810923,"target":"target","self":"clubot","from":"Origin_nick","msg":"Message text"}
