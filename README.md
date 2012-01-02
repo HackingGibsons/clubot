@@ -56,6 +56,23 @@ Replies with the TOPIC in of the channel named by `channel` in the following for
 {"type":"topic", "channel":"#somechan", "topic":"topic"}
 ```
 
+### Channels
+```json
+{"type":"channels"}
+```
+
+Replies with a list of channels the bot is in. If the bot is in no channels it will return `null`
+
+**TODO:** Reply with an empty list instead
+
+```json
+{"type":"channels", "channels":["#a", "#b"]}
+```
+of
+```json
+{"type":"channels", "channels":null}
+```
+
 ### Nick
 ```json
 {"type":"nick"}
@@ -92,6 +109,22 @@ Asks the bot to join the named channel.
 ```
 
 Emitted when the bot reboots to notify any downstream peers.
+
+### :PART
+```
+:PART who_nick #somechannel {"type":"part", "channel":"#somechannel", "who":"who_nick", "reason":"reason", "time":12093123}
+```
+
+Emitted when the bot parts a channel. The time is universal time. The reason is always a string, sometimes empty.
+If the bot itself is doing the parting the who_nick in the subscription portion of the message will be `:SELF`
+
+### :JOIN
+```
+:JOIN somenick #somechannel {"type":"join", "who":"somenick", "channel":"#somechannel", "time":12093123}
+```
+
+Emitted when the bot joins a channel. The time is universal time. If the bot itself is doing the joining the who nick
+in the subscription prefix will appear as `:SELF`
 
 ### :PRIVMSG
 ```

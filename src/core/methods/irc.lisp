@@ -1,8 +1,34 @@
 (in-package :clubot)
+(defcategory irc)
 
 (defmethod add-hooks ((bot clubot))
   "Add the generic hooks"
-  (irc:add-hook (connection bot) 'irc:irc-privmsg-message (arnesi:curry #'on-privmsg bot)))
+  (irc:add-hook (connection bot) 'irc:irc-privmsg-message (arnesi:curry #'on-privmsg bot))
+  (irc:add-hook (connection bot) 'irc:irc-join-message (arnesi:curry #'on-join bot))
+  (irc:add-hook (connection bot) 'irc:irc-part-message (arnesi:curry #'on-part bot)))
+
+(defmethod on-join ((bot clubot) msg)
+  "Handler for the IRC JOIN message."
+  (log-for (trace irc) "Join message: ~A" msg)
+  (let ((channel (car (irc:arguments msg)))
+        (me (irc:nickname (irc:user (connection bot))))
+        (who (irc:source msg)))
+    (broadcast bot :join
+               "~@{~A~^ ~}" (if (string= me who) ":SELF" who) channel
+               (json:encode-json-plist-to-string `(:type :join :who ,who :channel ,channel :time ,(get-universal-time))))
+    nil))
+
+(defmethod on-part ((bot clubot) msg)
+  "Handler for the IRC PART message."
+  (destructuring-bind (channel &optional (reason "")) (irc:arguments msg)
+    (let ((me (irc:nickname (irc:user (connection bot))))
+          (who (irc:source msg)))
+      (log-for (trace irc) "PART message: ~A => ~S" channel reason)
+      (remhash channel (irc:channels (connection bot)))
+      (broadcast bot :part
+                 "~@{~A~^ ~}" (if (string= me who) ":SELF" who) channel
+                 (json:encode-json-plist-to-string `(:type :part :who ,who :channel ,channel :reason ,reason :time ,(get-universal-time))))
+      nil)))
 
 (defmethod on-privmsg ((bot clubot) msg)
   "Handler for IRC PRIVMSG messages"
