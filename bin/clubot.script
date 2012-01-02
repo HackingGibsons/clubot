@@ -1,0 +1,14 @@
+#!/usr/bin/env sbcl --script
+;; -*- mode: Lisp;  -*-
+(require 'sb-aclrepl)
+
+;; Load an RC if we can find it
+(let ((rc (probe-file #P"~/.sbclrc")))
+  (when rc (load rc)))
+
+;; Load up the app
+(ql:quickload :clubot)
+
+(defvar *me* (namestring *load-pathname*))
+
+(clubot-cli:main `(,*me* ,@(rest sb-ext:*posix-argv*)))
