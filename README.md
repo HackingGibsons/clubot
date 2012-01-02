@@ -185,6 +185,13 @@ If the bot itself is doing the parting the who_nick in the subscription portion 
 Emitted when the bot joins a channel. The time is universal time. If the bot itself is doing the joining the who nick
 in the subscription prefix will appear as `:SELF`
 
+### :INVITE
+```
+:INVITE #channel inviter_nick {"type":"invite", "who":"botnick", "where":"#channel", "by": "inviter_nick"}
+```
+
+Emitted when the bot is invited into a channel.
+
 ### :PRIVMSG
 ```
 :PRIVMSG :CHATTER #somechan Origin_nick {"type":"privmsg",:"time":1230918203810923,"target":"target","self":"clubot","from":"Origin_nick","msg":"Message text"}
