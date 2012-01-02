@@ -4,20 +4,51 @@ It's kind of like an IRC bot, but I hope it'll just be a bridge.
 In summary, it's sweet as hell.
 
 # Quickstart
-Clone the repo
 
 ```
-$ # Clone the repo
+## Clone the repo
 $ git clone https://github.com/HackingGibsons/clubot.git
 $ cd clubot
-$ # Set up the project
-$ # (asdf, submodules, cast the darks spells to invoke the names of the ancients in eternal slumber)
+
+## Set up the project
+## (asdf, submodules, cast the darks spells to invoke the names of the ancients in eternal slumber)
 $ make develop
-$ # Repl
-$ sbcl
-* (ql:quickload :clubot) ;; Load the system
-* (clubot:clubot) ;; Run which might even do something!
+
+## Run the bot server
+$ bin/clubot.sh -n myclubot -s irc.example.com -p 6667
 ```
+
+You should now be able to send the bot commands and subscribe to messages over 0MQ:
+```common-lisp
+;; Join a channel then sit there and wait
+;; for a PRIVMSG and echo the raw message back
+;; into the channel we joined
+(zmq:with-context (ctx 1)
+  (zmq:with-socket (s ctx zmq:sub)
+    (zmq:with-socket (r ctx zmq:dealer)
+      (zmq:connect s "tcp://localhost:14532")
+      (zmq:connect r "tcp://localhost:14533")
+
+      ;; Only get PRIVMSG messages
+      (zmq:setsockopt s zmq:subscribe ":PRIVMSG")
+
+      ;; Join the echo channel
+      (let ((msg `(:type :join :channel "#mychan")))
+        (zmq:send s (make-instance 'zmq:msg :data (json:encode-json-plist-to-string msg))))
+
+      ;; Wait pending a message to echo back
+      (let ((msg (make-instance 'zmq:msg)))
+        (zmq:recv! s msg)
+        (format t "Msg: ~A~%" (zmq:msg-data-as-string msg))
+
+        ;; Ask the bot to echo the raw contents of the message to the channel
+        (let* ((req `(:type :speak :target "#mychan" :msg ,(zmq:msg-data-as-string msg)))
+               (sreq (json:encode-json-plist-to-string req)))
+
+        (zmq:send! r (make-instance 'zmq:msg :data sreq)))))))
+```
+
+
 
 # Operation and Protocol
 By default the bot will bind a ZMQ:PUB socket to `ipc:///tmp/clubot.name.events.pub.sock` and `tcp://*:14532`
