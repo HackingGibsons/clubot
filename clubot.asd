@@ -2,6 +2,7 @@
   :version "0.0.0"
   :depends-on (#:log5
                #:arnesi
+               #:unix-options
                #:alexandria
                #:iolib
                #:cl-json
@@ -24,6 +25,12 @@
                                              (:file "bot")
                                              (:file "request" :depends-on ("communication"))
                                              (:file "irc" :depends-on ("communication"))))))
+
+                         ;; CLI
+                         (:module "cli" :depends-on ("core" "clubot") :components
+                                  ((:file "package")
+                                   (:file "defcommand" :depends-on ("package"))
+                                   (:file "commands" :depends-on ("defcommand"))))
 
                          ;; App
                          (:file "clubot" :depends-on ("core"))))))
