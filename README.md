@@ -19,6 +19,7 @@ $ bin/clubot.sh -n myclubot -s irc.example.com -p 6667
 ```
 
 You should now be able to send the bot commands and subscribe to messages over 0MQ:
+
 ```common-lisp
 ;; Join a channel then sit there and wait
 ;; for a PRIVMSG and echo the raw message back
