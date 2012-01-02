@@ -72,7 +72,7 @@ and running the binary directly.
 ## Pick a deployment directory
 $ mkdir -p /deploy/to/clubot
 ## Extract the bundle
-$ tar xf path/to/clubot.bundle.tgz -C clubot
+$ tar xf path/to/clubot.bundle.tgz -C /deploy/to/clubot
 ## Execute the bot
 $ /deploy/to/clubot start -l -n myclubot -s irc.example.com -p 6667
 ```
