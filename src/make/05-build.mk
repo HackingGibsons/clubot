@@ -1,6 +1,7 @@
 #-*- mode:makefile-gmake; -*-
 BINDIR ?= $(ROOT)/bin
 BIN ?= $(BINDIR)/$(TARGET)
+COMPONENTS = $(shell find $(ROOT)/src -type f -name '*.lisp' -print)
 
 ## Buildapp ##
 BUILDAPP ?= $(BINDIR)/buildapp
@@ -23,7 +24,7 @@ clean-buildapp:
 ## Binary ##
 .PHONY: clubot
 clubot: $(BIN)
-$(BIN): $(BUILDAPP) | init
+$(BIN): $(BUILDAPP) $(ROOT)/$(TARGET).asd $(COMPONENTS) | init
 	@echo "=> Building $(TARGET) => $(BIN)"
 	$(LISP_PREFIX) $(BUILDAPP) --output $(BIN) \
 				               --asdf-path $(ROOT) \
