@@ -13,15 +13,18 @@
   (let ((channel (car (irc:arguments msg))))
     (broadcast bot :join
                "~@{~A~^ ~}" channel
-               (json:encode-json-plist-to-string `(:type :join :channel ,channel :time ,(get-universal-time))))))
+               (json:encode-json-plist-to-string `(:type :join :channel ,channel :time ,(get-universal-time))))
+    nil))
 
 (defmethod on-part ((bot clubot) msg)
   "Handler for the IRC PART message."
   (destructuring-bind (channel &optional (reason "")) (irc:arguments msg)
     (log-for (trace irc) "PART message: ~A => ~S" channel reason)
+    (remhash channel (irc:channels (connection bot)))
     (broadcast bot :part
                "~@{~A~^ ~}" channel
-               (json:encode-json-plist-to-string `(:type :part :channel ,channel :reason ,reason :time ,(get-universal-time))))))
+               (json:encode-json-plist-to-string `(:type :part :channel ,channel :reason ,reason :time ,(get-universal-time))))
+    nil))
 
 (defmethod on-privmsg ((bot clubot) msg)
   "Handler for IRC PRIVMSG messages"

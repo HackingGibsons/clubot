@@ -56,6 +56,23 @@ Replies with the TOPIC in of the channel named by `channel` in the following for
 {"type":"topic", "channel":"#somechan", "topic":"topic"}
 ```
 
+### Channels
+```json
+{"type":"channels"}
+```
+
+Replies with a list of channels the bot is in. If the bot is in no channels it will return `null`
+
+**TODO:** Reply with an empty list instead
+
+```json
+{"type":"channels", "channels":["#a", "#b"]}
+```
+of
+```json
+{"type":"channels", "channels":null}
+```
+
 ### Nick
 ```json
 {"type":"nick"}

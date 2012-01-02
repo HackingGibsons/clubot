@@ -67,3 +67,9 @@ there are no problems with it"
       (log-for (output request) "Speaking ~S => ~S" target msg)
       (irc:privmsg (connection bot) target msg))))
 
+(defhandler :channels ((bot clubot) type event id)
+  "Handle a request for a list of the current channels"
+  (log-for (trace request) "Getting a list of channels.")
+  (send-reply bot id
+              (json:encode-json-plist-to-string `(:type ,type
+                                                  ,type ,(arnesi:hash-table-keys (irc:channels (connection bot)))))))
