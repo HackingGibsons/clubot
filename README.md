@@ -15,7 +15,7 @@ $ cd clubot
 $ make develop
 
 ## Run the bot server
-$ bin/clubot.sh -n myclubot -s irc.example.com -p 6667
+$ bin/clubot.sh start -n myclubot -s irc.example.com -p 6667
 ```
 
 You should now be able to send the bot commands and subscribe to messages over 0MQ:
@@ -49,6 +49,33 @@ You should now be able to send the bot commands and subscribe to messages over 0
         (zmq:send! r (make-instance 'zmq:msg :data sreq)))))))
 ```
 
+# Building for deloyment
+The clubot can be built into a standalone bundle that does not require
+an external lisp interpreter or libraries.
+
+```
+## Clone the repo
+$ git clone https://github.com/HackingGibsons/clubot.git
+$ cd clubot
+
+## Build a standalone bundle tar
+$ make bundle
+[ .. lots of compile output ..]
+$ ls bin
+... clubot.bundle.tgz ...
+```
+
+The generated tarball can be deployed on a matching system by extracting it to a directory
+and running the binary directly.
+
+```
+## Pick a deployment directory
+$ mkdir -p /deploy/to/clubot
+## Extract the bundle
+$ tar xf path/to/clubot.bundle.tgz -C clubot
+## Execute the bot
+$ /deploy/to/clubot start -l -n myclubot -s irc.example.com -p 6667
+```
 
 
 # Operation and Protocol
