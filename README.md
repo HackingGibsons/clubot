@@ -49,7 +49,7 @@ You should now be able to send the bot commands and subscribe to messages over 0
         (zmq:send! r (make-instance 'zmq:msg :data sreq)))))))
 ```
 
-# Building for deloyment
+# Building for deployment and standalone entertainment
 The clubot can be built into a standalone bundle that does not require
 an external lisp interpreter or libraries.
 
