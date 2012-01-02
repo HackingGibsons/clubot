@@ -5,7 +5,17 @@
   "Add the generic hooks"
   (irc:add-hook (connection bot) 'irc:irc-privmsg-message (arnesi:curry #'on-privmsg bot))
   (irc:add-hook (connection bot) 'irc:irc-join-message (arnesi:curry #'on-join bot))
-  (irc:add-hook (connection bot) 'irc:irc-part-message (arnesi:curry #'on-part bot)))
+  (irc:add-hook (connection bot) 'irc:irc-part-message (arnesi:curry #'on-part bot))
+  (irc:add-hook (connection bot) 'irc:irc-invite-message (arnesi:curry #'on-invite bot)))
+
+(defmethod on-invite ((bot clubot) msg)
+  "Handler for the IRC INVITE message."
+  (log-for (trace irc) "Invite message: ~A" msg)
+  (destructuring-bind (who where &key by) `(,@(irc:arguments msg) :by ,(irc:source msg))
+    (broadcast bot :invite
+               "~@{~A~^ ~}" where by
+               (json:encode-json-plist-to-string `(:type :invite :who ,who :where ,where :by ,by))))
+  nil)
 
 (defmethod on-join ((bot clubot) msg)
   "Handler for the IRC JOIN message."
