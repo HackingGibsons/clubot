@@ -63,7 +63,7 @@ there are no problems with it"
   (log-for (output request) "Handling speak of ~A" event)
   (let* ((target (getf event :target))
          (msg (getf event :msg))
-         (seq (split-sequence #\Newline string :test #'string-equal)))
+         (seq (split-sequence #\Newline msg :test #'string-equal)))
     (log-for (output request) "Msg ~S sequence: ~S~%" msg seq)
     (when (and target msg)
       (dolist (string seq)
