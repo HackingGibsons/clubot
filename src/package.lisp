@@ -1,6 +1,7 @@
 (defpackage #:clubot
   (:use :cl)
   (:use :log5)
+  (:import-from :split-sequence :split-sequence)
   (:export :start-logging
            :stop-logging
 
