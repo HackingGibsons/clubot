@@ -66,8 +66,7 @@ there are no problems with it"
          (seq (split-sequence #\Newline string :test #'string-equal)))
     (log-for (output request) "Msg ~S sequence: ~S~%" msg seq)
     (when (and target msg)
-      (loop for string in seq
-         do
+      (dolist (string seq)
            (log-for (output request) "Speaking ~S => ~A" target string)
            (irc:privmsg (connection bot) target string)))))
 
