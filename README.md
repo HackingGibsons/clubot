@@ -152,16 +152,12 @@ Replies with the current nick of the bot
 
 Asks the bot to part the named channel. The reason component is entirely optional.
 
-**TODO:** No rely is generated, the part will be announced over the broadcast channels.
-
 ### Join
 ```json
 {"type":"join", "channel":"#channel"}
 ```
 
 Asks the bot to join the named channel.
-
-**TODO:** No rely is generated, the join will be announced over the broadcast channels.
 
 ## Broadcast messages
 Broadcast messages are sent in two parts. The first message contains the subscription component
