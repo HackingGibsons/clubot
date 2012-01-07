@@ -162,16 +162,25 @@ Asks the bot to join the named channel.
 **TODO:** No rely is generated, the join will be announced over the broadcast channels.
 
 ## Broadcast messages
+Broadcast messages are sent in two parts. The first message contains the subscription component
+and the second contains the actual message data. This makes separating the two uses of
+message easier than manually splitting a single message. ZeroMQ lets us use just the first message for
+subscriptions and promise the delivery of the second message if the first matches. It's pretty neat.
+
+Multipart messages are represented as different lines.
+
 ### :BOOT
 ```
-:BOOT {"type":"boot","time":123123312,"nick":"botname"}
+:BOOT
+{"type":"boot","time":123123312,"nick":"botname"}
 ```
 
 Emitted when the bot reboots to notify any downstream peers.
 
 ### :PART
 ```
-:PART who_nick #somechannel {"type":"part", "channel":"#somechannel", "who":"who_nick", "reason":"reason", "time":12093123}
+:PART "who_nick" "#somechannel"
+{"type":"part", "channel":"#somechannel", "who":"who_nick", "reason":"reason", "time":12093123}
 ```
 
 Emitted when the bot parts a channel. The time is universal time. The reason is always a string, sometimes empty.
@@ -179,7 +188,8 @@ If the bot itself is doing the parting the who_nick in the subscription portion 
 
 ### :JOIN
 ```
-:JOIN somenick #somechannel {"type":"join", "who":"somenick", "channel":"#somechannel", "time":12093123}
+:JOIN "somenick" "#somechannel"
+{"type":"join", "who":"somenick", "channel":"#somechannel", "time":12093123}
 ```
 
 Emitted when the bot joins a channel. The time is universal time. If the bot itself is doing the joining the who nick
@@ -187,14 +197,16 @@ in the subscription prefix will appear as `:SELF`
 
 ### :INVITE
 ```
-:INVITE #channel inviter_nick {"type":"invite", "who":"botnick", "where":"#channel", "by": "inviter_nick"}
+:INVITE "#channel" "inviter_nick"
+{"type":"invite", "who":"botnick", "where":"#channel", "by": "inviter_nick"}
 ```
 
 Emitted when the bot is invited into a channel.
 
 ### :PRIVMSG
 ```
-:PRIVMSG :CHATTER #somechan Origin_nick {"type":"privmsg",:"time":1230918203810923,"target":"target","self":"clubot","from":"Origin_nick","msg":"Message text"}
+:PRIVMSG :CHATTER "#somechan" "Origin_nick"
+{"type":"privmsg",:"time":1230918203810923,"target":"target","self":"clubot","from":"Origin_nick","msg":"Message text"}
 ```
 
 Emitted when the bot hears anything.
