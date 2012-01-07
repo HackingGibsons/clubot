@@ -31,4 +31,4 @@ from the `event-pub-sock' of `bot'"
                (make-instance 'zmq:msg :data type)
                zmq:sndmore)
     (zmq:send! (event-pub-sock bot)
-               (make-instance 'zmq:msg :data (princ-to-string message)))))
+               (make-instance 'zmq:msg :data message))))
