@@ -38,12 +38,14 @@ You should now be able to send the bot commands and subscribe to messages over 0
         (zmq:send s (make-instance 'zmq:msg :data (json:encode-json-plist-to-string msg))))
 
       ;; Wait pending a message to echo back
-      (let ((msg (make-instance 'zmq:msg)))
-        (zmq:recv! s msg)
-        (format t "Msg: ~A~%" (zmq:msg-data-as-string msg))
+      (let ((header (make-instance 'zmq:msg)) (data (make-instance 'zmq:msg)))
+        (zmq:recv! s header)
+        (format t "Header: ~A~%" (zmq:msg-data-as-string header))
+        (zmq:recv! s data)
+        (format t "Message: ~A~%" (zmq:msg-data-as-string data))
 
         ;; Ask the bot to echo the raw contents of the message to the channel
-        (let* ((req `(:type :speak :target "#mychan" :msg ,(zmq:msg-data-as-string msg)))
+        (let* ((req `(:type :speak :target "#mychan" :msg ,(zmq:msg-data-as-string data)))
                (sreq (json:encode-json-plist-to-string req)))
 
         (zmq:send! r (make-instance 'zmq:msg :data sreq)))))))
