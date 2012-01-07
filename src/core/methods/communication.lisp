@@ -12,10 +12,23 @@
     (send-reply bot id es)))
 
 (defcategory broadcast)
-(defmethod broadcast ((bot clubot) type data &rest format)
+(defmethod broadcast ((bot clubot) (type list) data &rest format)
+  "A wrapper to map a list of broadcast types to a string of them"
+  (broadcast bot (format nil "~{~S~^ ~}" type) data format))
+
+(defmethod broadcast ((bot clubot) (type symbol) data &rest format)
+  "A wrapper to map a symbol broadcast type to a string"
+  (broadcast bot (prin1-to-string type) data format))
+
+(defmethod broadcast ((bot clubot) (type string) data &rest format)
   "Broadcast a message in the format of '{type} {data}'
 from the `event-pub-sock' of `bot'"
   (let ((message (if format (apply #'format nil data format) data)))
     (log-for (trace broadcast) "Broadcasting: ~S ~A" type message)
+    ;; Send the subscription component and message body
+    ;; as separate messages for easier decoding
     (zmq:send! (event-pub-sock bot)
-               (make-instance 'zmq:msg :data (format nil "~S ~A" type message)))))
+               (make-instance 'zmq:msg :data type)
+               zmq:sndmore)
+    (zmq:send! (event-pub-sock bot)
+               (make-instance 'zmq:msg :data (princ-to-string message)))))

@@ -71,9 +71,9 @@
 	       (setf done :done))))
 
       (broadcast bot :boot (json:encode-json-plist-to-string
-			    `(:type :boot 
-				    :time ,(get-universal-time)
-				    :nick (irc:nickname (irc:user (connection bot))))))
+                            `(:type :boot
+                                    :time ,(get-universal-time)
+                                    :nick (irc:nickname (irc:user (connection bot))))))
 
       (let ((items  (list (make-instance 'zmq:pollitem :socket (request-sock bot) :events zmq:pollin)
 			  (make-instance 'zmq:pollitem :fd (connection-fd (connection bot)) :events zmq:pollin))))
@@ -84,5 +84,5 @@
 	     (done done)
 	  (cond ((= req-ready zmq:pollin)
 		 (maybe-service-zmq-request (request-sock bot)))
-		((= irc-ready zmq:pollin) 
+		((= irc-ready zmq:pollin)
 		 (irc-message-or-exit))))))))

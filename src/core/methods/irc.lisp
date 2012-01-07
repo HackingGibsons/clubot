@@ -12,8 +12,7 @@
   "Handler for the IRC INVITE message."
   (log-for (trace irc) "Invite message: ~A" msg)
   (destructuring-bind (who where &key by) `(,@(irc:arguments msg) :by ,(irc:source msg))
-    (broadcast bot :invite
-               "~@{~A~^ ~}" where by
+    (broadcast bot `(:invite ,where ,by)
                (json:encode-json-plist-to-string `(:type :invite :who ,who :where ,where :by ,by))))
   nil)
 
@@ -23,8 +22,7 @@
   (let ((channel (car (irc:arguments msg)))
         (me (irc:nickname (irc:user (connection bot))))
         (who (irc:source msg)))
-    (broadcast bot :join
-               "~@{~A~^ ~}" (if (string= me who) ":SELF" who) channel
+    (broadcast bot `(:join ,(if (string= me who) ":SELF" who) ,channel)
                (json:encode-json-plist-to-string `(:type :join :who ,who :channel ,channel :time ,(get-universal-time))))
     nil))
 
@@ -35,8 +33,7 @@
           (who (irc:source msg)))
       (log-for (trace irc) "PART message: ~A => ~S" channel reason)
       (remhash channel (irc:channels (connection bot)))
-      (broadcast bot :part
-                 "~@{~A~^ ~}" (if (string= me who) ":SELF" who) channel
+      (broadcast bot `(:part ,(if (string= me who) ":SELF" who) ,channel)
                  (json:encode-json-plist-to-string `(:type :part :who ,who :channel ,channel :reason ,reason :time ,(get-universal-time))))
       nil)))
 
@@ -52,5 +49,6 @@
                                                         :self ,me
                                                         :from ,from
                                                         :msg ,text))))
-      (broadcast bot :privmsg "~S ~S ~@{~A~^ ~}" style (if (string= target me) :self target) from message))))
+      (broadcast bot `(:privmsg ,style ,(if (string= target me) :self target) ,from)
+                 message))))
 
