@@ -3,6 +3,14 @@ It's kind of like an IRC bot, but I hope it'll just be a bridge.
 
 In summary, it's sweet as hell.
 
+## Jenkins
+http://boot.sh:8080/job/clubot/
+
+There are no "tests" proper yet, but it will build up the latest bundle when it's possible.
+
+##Latest x64 Linux binary
+http://boot.sh:8080/job/clubot/lastSuccessfulBuild/artifact/bin/clubot.bundle.tgz
+
 # Quickstart
 
 ```
