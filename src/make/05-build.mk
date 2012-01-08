@@ -32,7 +32,7 @@ $(BIN): $(BUILDAPP) $(ROOT)/$(TARGET).asd $(COMPONENTS) | init
                                --load $(QL_SETUP) \
                                --load $(ROOT)/src/patches/build.lisp \
 				               --require sb-aclrepl \
-				               --eval '(asdf:load-system :clubot)' \
+				               --eval '(ql:quickload :clubot)' \
                                --eval "(setf clubot:*git-revision* \"$$(git rev-parse HEAD || echo UNKNOWN)\")" \
 				               --dispatched-entry '/clubot-cli:main' \
 	|| { \
