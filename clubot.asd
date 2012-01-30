@@ -7,7 +7,7 @@
                #:alexandria
                #:iolib
                #:cl-json
-               #:zeromq
+               #:zmq
                #:cl-irc)
   :components ((:module "src" :components
                         ((:module "patches" :components
