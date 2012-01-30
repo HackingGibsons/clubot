@@ -33,8 +33,8 @@ You should now be able to send the bot commands and subscribe to messages over 0
 ;; for a PRIVMSG and echo the raw message back
 ;; into the channel we joined
 (zmq:with-context (ctx 1)
-  (zmq:with-socket (s ctx zmq:sub)
-    (zmq:with-socket (r ctx zmq:dealer)
+  (zmq:with-socket (s ctx :sub)
+    (zmq:with-socket (r ctx :dealer)
       (zmq:connect s "tcp://localhost:14532")
       (zmq:connect r "tcp://localhost:14533")
 
@@ -43,20 +43,18 @@ You should now be able to send the bot commands and subscribe to messages over 0
 
       ;; Join the echo channel
       (let ((msg `(:type :join :channel "#mychan")))
-        (zmq:send s (make-instance 'zmq:msg :data (json:encode-json-plist-to-string msg))))
-
+         (zmq:send! s (json:encode-json-plist-to-string msg))
       ;; Wait pending a message to echo back
-      (let ((header (make-instance 'zmq:msg)) (data (make-instance 'zmq:msg)))
-        (zmq:recv! s header)
-        (format t "Header: ~A~%" (zmq:msg-data-as-string header))
-        (zmq:recv! s data)
-        (format t "Message: ~A~%" (zmq:msg-data-as-string data))
+      (let ((header (zmq:recv! s :string)) 
+            (data (zmq:recv! s :string)))
+        (format t "Header: ~A~%" header)
+        (format t "Message: ~A~%" data)
 
         ;; Ask the bot to echo the raw contents of the message to the channel
-        (let* ((req `(:type :speak :target "#mychan" :msg ,(zmq:msg-data-as-string data)))
+        (let* ((req `(:type :speak :target "#mychan" :msg ,data))
                (sreq (json:encode-json-plist-to-string req)))
 
-        (zmq:send! r (make-instance 'zmq:msg :data sreq)))))))
+        (zmq:send! r sreq)))))))
 ```
 
 # Building for deployment and standalone entertainment
