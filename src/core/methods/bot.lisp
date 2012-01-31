@@ -27,8 +27,8 @@
 (defmethod run :around ((bot clubot) &key)
   "Set up the ZMQ context and other in-flight parameters for the `bot'"
   (zmq:with-context (ctx 1)
-    (zmq:with-socket (epub ctx zmq:pub)
-      (zmq:with-socket (req ctx zmq:router)
+    (zmq:with-socket (epub ctx :pub)
+      (zmq:with-socket (req ctx :router)
 
         (setf (context bot) ctx
               (event-pub-sock bot) epub
@@ -59,11 +59,9 @@
 
 	   (maybe-service-zmq-request (socket)
 	     "See if we have an event on the ZMQ request socket"
-	     (let ((id (make-instance 'zmq:msg))
-		   (msg (make-instance 'zmq:msg)))
-	       (zmq:recv! socket id)
-	       (zmq:recv! socket msg)
-	       (on-request bot (zmq:msg-data-as-string msg) (zmq:msg-data-as-array id))))
+	     (let ((id (zmq:recv! socket :string))
+		   (msg (zmq:recv! socket :string)))
+	       (on-request bot msg id)))
 
 	   (irc-message-or-exit ()
 	     "Read an IRC event."
@@ -75,14 +73,17 @@
                                     :time ,(get-universal-time)
                                     :nick (irc:nickname (irc:user (connection bot))))))
 
-      (let ((items  (list (make-instance 'zmq:pollitem :socket (request-sock bot) :events zmq:pollin)
-			  (make-instance 'zmq:pollitem :fd (connection-fd (connection bot)) :events zmq:pollin))))
-
-	(do* ((revents (zmq:poll items :retry t) (zmq:poll items :retry t))
-	      (req-ready (first revents) (first revents))
-	      (irc-ready (second revents) (second revents)))
-	     (done done)
-	  (cond ((= req-ready zmq:pollin)
-		 (maybe-service-zmq-request (request-sock bot)))
-		((= irc-ready zmq:pollin)
-		 (irc-message-or-exit))))))))
+      (let ((in-sockets (list (request-sock bot) 
+                              (connection-fd (connection bot)))))
+        (zmq:with-poll-sockets (items size :in in-sockets)
+          (do* ((nbitems (zmq:poll items size -1)
+                         (zmq:poll items size -1))
+                (req-ready (zmq:poll-item-events-signaled-p (zmq:poll-items-aref items 0) :pollin)
+                           (zmq:poll-item-events-signaled-p (zmq:poll-items-aref items 0) :pollin))
+                (irc-ready (zmq:poll-item-events-signaled-p (zmq:poll-items-aref items 1) :pollin)
+                           (zmq:poll-item-events-signaled-p (zmq:poll-items-aref items 1) :pollin)))
+               (done done)
+            (cond (req-ready
+                   (maybe-service-zmq-request (request-sock bot)))
+                  (irc-ready
+                   (irc-message-or-exit)))))))))
