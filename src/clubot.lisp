@@ -12,9 +12,9 @@
 (defgeneric clubot (&key)
   (:documentation "The main entry of the clubot"))
 
-(defmethod clubot (&key (nick "clubot") (host "localhost") (port 6667))
+(defmethod clubot (&key (nick "clubot") (host "localhost") (port 6667) password)
   (let ((bot (make-instance 'clubot :nick nick
-                            :irc-host host :irc-port port)))
+                            :irc-host host :irc-port port :irc-password password)))
     (setf *clubot* bot)
     (log-for (output clubot) "Booting..")
     (run bot)))
