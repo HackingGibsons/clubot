@@ -66,6 +66,8 @@
                   (msg (zmq:msg-init)
                        (zmq:msg-init)))
                  ((not (find :pollin events :test #'eq))
+                  (zmq:msg-close id)
+                  (zmq:msg-close msg)
                   (log-for (output) "No read events. ~S" events))
                (handler-case (zmq:recv (request-sock bot) id)
                  (zmq:eagain-error (c) (log-for (output) "Nothing to read.") 
