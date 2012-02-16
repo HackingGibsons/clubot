@@ -52,38 +52,60 @@
 (defmethod run ((bot clubot) &key)
   "Set up and run the main event loop driving the IRC and 0MQ communication."
   (log-for (output clubot) "Using context: ~A" (context bot))
-  (let (done)
+  (iolib.multiplex:with-event-base (ev)
     (flet ((connection-fd (c)
 	     "HACK: Get the unix FD under the connection."
 	     (sb-bsd-sockets:socket-file-descriptor (usocket:socket (irc::socket c))))
 
-	   (maybe-service-zmq-request (socket)
+	   (maybe-service-zmq-request (fd event ex)
 	     "See if we have an event on the ZMQ request socket"
-	     (let ((id (zmq:recv! socket :string))
-		   (msg (zmq:recv! socket :string)))
-	       (on-request bot msg id)))
+             (do ((events (zmq::getsockopt (request-sock bot) :events)
+                          (zmq::getsockopt (request-sock bot) :events))
+                  (id (zmq:msg-init) 
+                      (zmq:msg-init))
+                  (msg (zmq:msg-init)
+                       (zmq:msg-init)))
+                 ((not (find :pollin events :test #'eq))
+                  (log-for (output) "No read events. ~S" events))
+               (handler-case (zmq:recv (request-sock bot) id)
+                 (zmq:eagain-error (c) (log-for (output) "Nothing to read.") 
+                                   (zmq:msg-close id)
+                                   (zmq:msg-close msg)
+                                   (return))
+                 (t (c) (log-for (output) "Something went horribly wrong while reading the id.")
+                    (zmq:msg-close id)
+                    (zmq:msg-close msg)
+                    (return)))
+               (handler-case (zmq:recv (request-sock bot) msg)
+                 (t (c) (log-for (output) "Reading the  message part went horribly wrong!")
+                    (zmq:msg-close id)
+                    (zmq:msg-close msg)
+                    (return)))
+               (log-for (output) "Msg read ~A from id ~A" (zmq:msg-data-string msg) id)
+               (on-request bot 
+                           (zmq:msg-data-string msg) id)
+               (zmq:msg-close msg)
+               (zmq:msg-close id)))
 
-	   (irc-message-or-exit ()
+	   (irc-message-or-exit (fd event ex)
 	     "Read an IRC event."
+             (declare (ignorable fd event ex))
+             (log-for (output) "IRC Message event.")
 	     (unless (irc:read-message (connection bot))
-	       (setf done :done))))
+               (iolib.multiplex:exit-event-loop ev))))
+
+      (iolib.multiplex:set-io-handler ev 
+                                      (zmq:getsockopt (request-sock bot) :fd)
+                                      :read
+                                      #'maybe-service-zmq-request)
+
+      (iolib.multiplex:set-io-handler ev
+                                      (connection-fd (connection bot))
+                                      :read
+                                      #'irc-message-or-exit)
 
       (broadcast bot :boot (json:encode-json-plist-to-string
                             `(:type :boot
                                     :time ,(get-universal-time)
                                     :nick (irc:nickname (irc:user (connection bot))))))
-
-      (let ((in-sockets (list (request-sock bot) 
-                              (connection-fd (connection bot)))))
-        (zmq:with-poll-sockets (items size :in in-sockets)
-          (do* ((nbitems (zmq:poll items size -1)
-                         (zmq:poll items size -1))
-                (req-ready (zmq:poll-item-events-signaled-p (zmq:poll-items-aref items 0) :pollin)
-                           (zmq:poll-item-events-signaled-p (zmq:poll-items-aref items 0) :pollin))
-                (irc-ready (zmq:poll-item-events-signaled-p (zmq:poll-items-aref items 1) :pollin)
-                           (zmq:poll-item-events-signaled-p (zmq:poll-items-aref items 1) :pollin)))
-               (done done)
-            (cond (req-ready
-                   (maybe-service-zmq-request (request-sock bot)))
-                  (irc-ready
-                   (irc-message-or-exit)))))))))
+      (iolib.multiplex:event-dispatch ev))))
